@@ -1,0 +1,7 @@
+# Pins postgres to a stable version. postgres:latest jumped to v18 (breaking data layout).
+services:
+  db:
+    image: postgres:16
+  app:
+    volumes:
+      - ./google-credentials.json:/usr/app/google-credentials.json:ro

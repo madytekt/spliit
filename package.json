@@ -46,6 +46,7 @@
     "content-disposition": "^0.5.4",
     "dayjs": "^1.11.10",
     "embla-carousel-react": "^8.6.0",
+    "googleapis": "^144.0.0",
     "lucide-react": "^0.501.0",
     "nanoid": "^5.0.4",
     "negotiator": "^0.6.3",

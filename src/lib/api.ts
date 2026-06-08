@@ -333,6 +333,16 @@ export async function getGroup(groupId: string) {
   })
 }
 
+export async function deleteGroup(groupId: string) {
+  await prisma.$transaction([
+    // ExpenseDocument has no cascade from Expense in the schema, so delete first to avoid orphans
+    prisma.expenseDocument.deleteMany({
+      where: { Expense: { groupId } },
+    }),
+    prisma.group.delete({ where: { id: groupId } }),
+  ])
+}
+
 export async function getCategories() {
   return prisma.category.findMany()
 }
