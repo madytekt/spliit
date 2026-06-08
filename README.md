@@ -1,127 +1,123 @@
-[<img alt="Spliit" height="60" src="https://github.com/spliit-app/spliit/blob/main/public/logo-with-text.png?raw=true" />](https://spliit.app)
+# Spliit — Self-Hosted Couples Expense Tracker
 
-Spliit is a free and open source alternative to Splitwise. You can either use the official instance at [Spliit.app](https://spliit.app), or deploy your own instance:
+A private, self-hosted expense tracker for two people. Fork of the open-source [Spliit](https://github.com/spliit-app/spliit) project, extended with self-hosting infrastructure and a few features built for a couple sharing all finances.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fspliit-app%2Fspliit&project-name=my-spliit-instance&repository-name=my-spliit-instance&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D&)
+**Live repo:** [github.com/madytekt/spliit](https://github.com/madytekt/spliit)
 
-## Features
+---
 
-- [x] Create a group and share it with friends
-- [x] Create expenses with description
-- [x] Display group balances
-- [x] Create reimbursement expenses
-- [x] Progressive Web App
-- [x] Select all/no participant for expenses
-- [x] Split expenses unevenly [(#6)](https://github.com/spliit-app/spliit/issues/6)
-- [x] Mark a group as favorite [(#29)](https://github.com/spliit-app/spliit/issues/29)
-- [x] Tell the application who you are when opening a group [(#7)](https://github.com/spliit-app/spliit/issues/7)
-- [x] Assign a category to expenses [(#35)](https://github.com/spliit-app/spliit/issues/35)
-- [x] Search for expenses in a group [(#51)](https://github.com/spliit-app/spliit/issues/51)
-- [x] Upload and attach images to expenses [(#63)](https://github.com/spliit-app/spliit/issues/63)
-- [x] Create expense by scanning a receipt [(#23)](https://github.com/spliit-app/spliit/issues/23)
+## The problem
 
-### Possible incoming features
+Apps like Splitwise and Splid are convenient, but they come with trade-offs: your financial data lives on someone else's server, they show ads, they can change pricing or shut down, and you have no control over how your data is stored or retained. For two people sharing all expenses, that's a lot of sensitive data to hand over to a third party indefinitely.
 
-- [ ] Ability to create recurring expenses [(#5)](https://github.com/spliit-app/spliit/issues/5)
-- [ ] Import expenses from Splitwise [(#22)](https://github.com/spliit-app/spliit/issues/22)
+This project solves that by running everything privately. No cloud service sees the data. No public URL exists. Just two phones and a server that belongs to us.
 
-## Stack
+---
 
-- [Next.js](https://nextjs.org/) for the web application
-- [TailwindCSS](https://tailwindcss.com/) for the styling
-- [shadcn/UI](https://ui.shadcn.com/) for the UI components
-- [Prisma](https://prisma.io) to access the database
-- [Vercel](https://vercel.com/) for hosting (application and database)
+## How it works
 
-## Contribute
+The app runs 24/7 on a cloud VPS (Oracle Cloud Free Tier — ARM-based, always free). It is completely invisible to the public internet: there is no domain name, no open port, nothing for a scanner to find.
 
-The project is open to contributions. Feel free to open an issue or even a pull-request! 
-Join the discussion in [the Spliit Discord server](https://discord.gg/YSyVXbwvSY).
+Access works through [Tailscale](https://tailscale.com/), a private network overlay that connects only our enrolled devices (two phones, two laptops). When you open the app from an enrolled device, it loads instantly with no login prompt — because being on the private network is the authentication. The app is also installable as a PWA (Progressive Web App), so it sits on the home screen like any native app.
 
-If you want to contribute financially and help us keep the application free and without ads, you can also:
+---
 
-- 💜 [Sponsor me (Sebastien)](https://github.com/sponsors/scastiel), or
-- 💙 [Make a small one-time donation](https://donate.stripe.com/28o3eh96G7hH8k89Ba).
+## Architecture
 
-### Translation
-
-The project's translations are managed using [our Weblate project](https://hosted.weblate.org/projects/spliit/spliit/). 
-You can easily add missing translations to the project or even add a new language!
-Here is the current state of translation:
-
-<a href="https://hosted.weblate.org/engage/spliit/">
-<img src="https://hosted.weblate.org/widget/spliit/spliit/multi-auto.svg" alt="Translation status" />
-</a>
-
-## Run locally
-
-1. Clone the repository (or fork it if you intend to contribute)
-2. Start a PostgreSQL server. You can run `./scripts/start-local-db.sh` if you don’t have a server already.
-3. Copy the file `.env.example` as `.env`
-4. Run `npm install` to install dependencies. This will also apply database migrations and update Prisma Client.
-5. Run `npm run dev` to start the development server
-
-## Run in a container
-
-1. Run `npm run build-image` to build the docker image from the Dockerfile
-2. Copy the file `container.env.example` as `container.env`
-3. Run `npm run start-container` to start the postgres and the spliit2 containers
-4. You can access the app by browsing to http://localhost:3000
-
-## Health check
-
-The application has a health check endpoint that can be used to check if the application is running and if the database is accessible.
-
-- `GET /api/health/readiness` or `GET /api/health` - Check if the application is ready to serve requests, including database connectivity.
-- `GET /api/health/liveness` - Check if the application is running, but not necessarily ready to serve requests.
-
-## Opt-in features
-
-### Expense documents
-
-Spliit offers users to upload images (to an AWS S3 bucket) and attach them to expenses. To enable this feature:
-
-- Follow the instructions in the _S3 bucket_ and _IAM user_ sections of [next-s3-upload](https://next-s3-upload.codingvalue.com/setup#s3-bucket) to create and set up an S3 bucket where images will be stored.
-- Update your environments variables with appropriate values:
-
-```.env
-NEXT_PUBLIC_ENABLE_EXPENSE_DOCUMENTS=true
-S3_UPLOAD_KEY=AAAAAAAAAAAAAAAAAAAA
-S3_UPLOAD_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-S3_UPLOAD_BUCKET=name-of-s3-bucket
-S3_UPLOAD_REGION=us-east-1
+```
+┌─────────────────────────────────────────────────┐
+│  Oracle Cloud Free Tier ARM VPS                 │
+│  4 OCPU / 24 GB RAM / 200 GB disk — always $0   │
+│                                                 │
+│  ┌──────────────────────────────────────────┐   │
+│  │  Docker Compose                          │   │
+│  │  • Next.js app  (port 3000, localhost)   │   │
+│  │  • PostgreSQL   (port 5432, localhost)   │   │
+│  └──────────────────────────────────────────┘   │
+│                                                 │
+│  Tailscale daemon                               │
+│  • `tailscale serve` → HTTPS on port 443        │
+│  • No public port exposed                       │
+└─────────────────────────────────────────────────┘
+         ▲                        ▲
+         │  Tailscale WireGuard   │
+    iPhone / Android         Laptop
+    (PWA on home screen)
 ```
 
-You can also use other S3 providers by providing a custom endpoint:
+- **Oracle Cloud Free Tier** — ARM VPS, genuinely free forever, always on.
+- **Docker Compose** — Next.js app container + PostgreSQL container. Data persists in a named volume.
+- **Tailscale** — Creates an encrypted WireGuard tunnel between enrolled devices and the server. `tailscale serve` terminates HTTPS at the server; no certificate management needed.
+- **GitHub fork → build on server** — Source is cloned directly on the VPS. `docker compose up --build` to deploy updates.
+- **Google Sheets sync** — A nightly Google Apps Script job exports all expenses to a shared spreadsheet: one tab per group, an All tab combining everything, and a Sync Log. Useful as a human-readable backup and for ad-hoc spreadsheet analysis.
+- **Encrypted backups** — Nightly database backups (planned).
 
-```.env
-S3_UPLOAD_ENDPOINT=http://localhost:9000
-```
+---
 
-### Create expense from receipt
+## What this fork adds
 
-You can offer users to create expense by uploading a receipt. This feature relies on [OpenAI GPT-4 with Vision](https://platform.openai.com/docs/guides/vision) and a public S3 storage endpoint.
+The upstream Spliit project already handles the hard parts (see below). This fork adds:
 
-To enable the feature:
+| Feature | Description |
+|---|---|
+| **Delete Group** | A confirmation dialog that fully deletes a group and all its data in a single cascade. Upstream Spliit has no delete option. |
+| **Google Sheets sync** | Nightly export of all expenses to a shared Google Sheet. One tab per group, one combined tab, one sync log tab. |
+| **Self-hosting runbook** | Docker Compose setup, Tailscale configuration, Oracle Cloud provisioning guide — everything needed to reproduce this exact setup. |
 
-- You must enable expense documents feature as well (see section above). That might change in the future, but for now we need to store images to make receipt scanning work.
-- Subscribe to OpenAI API and get access to GPT 4 with Vision (you might need to buy credits in advance).
-- Update your environment variables with appropriate values:
+---
 
-```.env
-NEXT_PUBLIC_ENABLE_RECEIPT_EXTRACT=true
-OPENAI_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
+## Why fork Spliit instead of building from scratch
 
-### Deduce category from title
+Spliit already ships a well-tested core:
 
-You can offer users to automatically deduce the expense category from the title. Since this feature relies on a OpenAI subscription, follow the signup instructions above and configure the following environment variables:
+- Expense CRUD with descriptions, categories, and dates
+- Split math: equal, exact amounts, percentages, shares
+- Debt simplification and settlement tracking
+- Multi-currency per expense (original amount + conversion rate stored separately)
+- Receipt scanning via OpenAI Vision
+- PWA manifest and service worker
+- tRPC API, Prisma migrations, shadcn/ui component library
 
-```.env
-NEXT_PUBLIC_ENABLE_CATEGORY_EXTRACT=true
-OPENAI_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
+Rebuilding all of that would take months and introduce bugs in the math that matters most (money). Forking and extending it took days. The fork stays close to upstream so that future Spliit improvements can be merged in with minimal conflict.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js (App Router) + TypeScript |
+| API | tRPC |
+| Database ORM | Prisma → PostgreSQL |
+| UI | TailwindCSS + shadcn/ui |
+| Deployment | Docker Compose |
+| Private networking | Tailscale |
+
+---
+
+## Setup overview
+
+This is not a step-by-step tutorial, but here is the shape of the setup:
+
+1. **Clone the repo** on your server (or locally for development).
+2. **Create `container.env`** with database credentials (`POSTGRES_PASSWORD`, `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`). This file is gitignored and never committed.
+3. **Start the stack:**
+   ```bash
+   docker compose --env-file container.env up -d
+   ```
+4. **Install Tailscale** on the server, then expose the app over your private network:
+   ```bash
+   tailscale serve --bg 3000
+   ```
+5. **Access the app** from any enrolled device at `https://<your-device-name>.ts.net`.
+6. **Install as PWA** — in your mobile browser, tap "Add to Home Screen".
+
+Optional: configure `OPENAI_API_KEY` to enable receipt scanning, and S3 credentials to enable expense photo attachments. See the upstream Spliit docs for details on those opt-in features.
+
+---
 
 ## License
 
-MIT, see [LICENSE](./LICENSE).
+MIT — same as the upstream Spliit project. See [LICENSE](./LICENSE).
+
+Upstream project: [github.com/spliit-app/spliit](https://github.com/spliit-app/spliit) by [Sebastien Castiel](https://github.com/scastiel) and contributors.
