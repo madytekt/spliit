@@ -18,7 +18,7 @@ This project solves that by running everything privately. No cloud service sees 
 
 The app runs 24/7 on a cloud VPS (Oracle Cloud Free Tier — ARM-based, always free). It is completely invisible to the public internet: there is no domain name, no open port, nothing for a scanner to find.
 
-Access works through [Tailscale](https://tailscale.com/), a private network overlay that connects only our enrolled devices (two phones, two laptops). When you open the app from an enrolled device, it loads instantly with no login prompt — because being on the private network is the authentication. The app is also installable as a PWA (Progressive Web App), so it sits on the home screen like any native app.
+Access works through [Tailscale](https://tailscale.com/), a private network overlay that connects only our enrolled devices (e.g. two phones, two laptops). When you open the app from an enrolled device, it loads instantly with no login prompt — because being on the private network is the authentication. The app is also installable as a PWA (Progressive Web App), so it sits on the home screen like any native app.
 
 ---
 
