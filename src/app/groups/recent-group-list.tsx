@@ -8,10 +8,11 @@ import {
 } from '@/app/groups/recent-groups-helpers'
 import { Button } from '@/components/ui/button'
 import { getGroups } from '@/lib/api'
+import { formatCurrency, getCurrencyFromGroup } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 import { AppRouterOutput } from '@/trpc/routers/_app'
 import { Loader2 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { RecentGroupListCard } from './recent-group-list-card'
@@ -103,9 +104,26 @@ function RecentGroupList_({
   refreshGroupsFromStorage: () => void
 }) {
   const t = useTranslations('Groups')
+  const locale = useLocale()
+  const [activeUsers, setActiveUsers] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const mapping: Record<string, string> = {}
+    for (const group of groups) {
+      const u = localStorage.getItem(`${group.id}-activeUser`)
+      if (u && u !== 'None' && u !== '') mapping[group.id] = u
+    }
+    setActiveUsers(mapping)
+  }, [groups])
+
   const { data, isLoading } = trpc.groups.list.useQuery({
     groupIds: groups.map((group) => group.id),
   })
+
+  const { data: balancesData } = trpc.groups.balances.listForGroups.useQuery(
+    { groupIds: groups.map((group) => group.id) },
+    { enabled: groups.length > 0 },
+  )
 
   if (isLoading || !data) {
     return (
@@ -140,8 +158,65 @@ function RecentGroupList_({
     archivedGroups,
   })
 
+  // Compute per-group balances and cross-group total for the active user
+  const userBalances: Record<string, number | undefined> = {}
+  let crossGroupTotal = 0
+  let crossGroupCurrency: ReturnType<typeof getCurrencyFromGroup> | null = null
+  let allSameCurrency = true
+
+  for (const group of groups) {
+    const activeUserId = activeUsers[group.id]
+    const groupDetail = data.groups.find((g) => g.id === group.id)
+    if (!activeUserId || !groupDetail || !balancesData) continue
+
+    const bal = balancesData.balances[group.id]?.[activeUserId]?.total
+    userBalances[group.id] = bal ?? 0
+
+    const currency = getCurrencyFromGroup(groupDetail)
+    if (crossGroupCurrency === null) {
+      crossGroupCurrency = currency
+    } else if (currency.code !== crossGroupCurrency.code) {
+      allSameCurrency = false
+    }
+    crossGroupTotal += bal ?? 0
+  }
+
+  const showCrossGroupTotal =
+    allSameCurrency &&
+    crossGroupCurrency !== null &&
+    Object.keys(userBalances).length > 0
+
   return (
     <GroupsPage reload={refreshGroupsFromStorage}>
+      {showCrossGroupTotal && (
+        <div
+          className={`mb-4 rounded-lg px-4 py-3 text-sm flex items-center justify-between ${
+            crossGroupTotal > 0
+              ? 'bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200'
+              : crossGroupTotal < 0
+              ? 'bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200'
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          <span className="font-medium">
+            {crossGroupTotal === 0
+              ? 'All settled up across groups'
+              : crossGroupTotal > 0
+              ? 'You are owed overall'
+              : 'You owe overall'}
+          </span>
+          {crossGroupTotal !== 0 && (
+            <span className="font-bold text-base">
+              {formatCurrency(
+                crossGroupCurrency!,
+                Math.abs(crossGroupTotal),
+                locale,
+              )}
+            </span>
+          )}
+        </div>
+      )}
+
       {starredGroupInfo.length > 0 && (
         <>
           <h2 className="mb-2">{t('starred')}</h2>
@@ -151,6 +226,7 @@ function RecentGroupList_({
             archivedGroups={archivedGroups}
             starredGroups={starredGroups}
             refreshGroupsFromStorage={refreshGroupsFromStorage}
+            userBalances={userBalances}
           />
         </>
       )}
@@ -164,6 +240,7 @@ function RecentGroupList_({
             archivedGroups={archivedGroups}
             starredGroups={starredGroups}
             refreshGroupsFromStorage={refreshGroupsFromStorage}
+            userBalances={userBalances}
           />
         </>
       )}
@@ -178,6 +255,7 @@ function RecentGroupList_({
               archivedGroups={archivedGroups}
               starredGroups={starredGroups}
               refreshGroupsFromStorage={refreshGroupsFromStorage}
+              userBalances={userBalances}
             />
           </div>
         </>
@@ -192,12 +270,14 @@ function GroupList({
   starredGroups,
   archivedGroups,
   refreshGroupsFromStorage,
+  userBalances,
 }: {
   groups: RecentGroups
   groupDetails?: AppRouterOutput['groups']['list']['groups']
   starredGroups: string[]
   archivedGroups: string[]
   refreshGroupsFromStorage: () => void
+  userBalances?: Record<string, number | undefined>
 }) {
   return (
     <ul className="grid gap-2 sm:grid-cols-2">
@@ -211,6 +291,7 @@ function GroupList({
           isStarred={starredGroups.includes(group.id)}
           isArchived={archivedGroups.includes(group.id)}
           refreshGroupsFromStorage={refreshGroupsFromStorage}
+          userBalanceTotal={userBalances?.[group.id]}
         />
       ))}
     </ul>

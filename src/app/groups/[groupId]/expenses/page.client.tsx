@@ -3,6 +3,7 @@
 import { ActiveUserModal } from '@/app/groups/[groupId]/expenses/active-user-modal'
 import { CreateFromReceiptButton } from '@/app/groups/[groupId]/expenses/create-from-receipt-button'
 import { ExpenseList } from '@/app/groups/[groupId]/expenses/expense-list'
+import { GroupBalanceBanner } from '@/app/groups/[groupId]/expenses/group-balance-banner'
 import ExportButton from '@/app/groups/[groupId]/export-button'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,6 +35,7 @@ export default function GroupExpensesPageClient({
 
   return (
     <>
+      <GroupBalanceBanner />
       <Card className="mb-4 rounded-none -mx-4 border-x-0 sm:border-x sm:rounded-lg sm:mx-0">
         <div className="flex flex-1">
           <CardHeader className="flex-1 p-4 sm:p-6">

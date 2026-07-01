@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/use-toast'
+import { formatCurrency, getCurrencyFromGroup } from '@/lib/utils'
 import { AppRouterOutput } from '@/trpc/routers/_app'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 import { Calendar, MoreHorizontal, Star, Users } from 'lucide-react'
@@ -28,12 +29,14 @@ export function RecentGroupListCard({
   isStarred,
   isArchived,
   refreshGroupsFromStorage,
+  userBalanceTotal,
 }: {
   group: RecentGroup
   groupDetail?: AppRouterOutput['groups']['list']['groups'][number]
   isStarred: boolean
   isArchived: boolean
   refreshGroupsFromStorage: () => void
+  userBalanceTotal?: number
 }) {
   const router = useRouter()
   const locale = useLocale()
@@ -132,17 +135,37 @@ export function RecentGroupListCard({
                     <Users className="w-3 h-3 inline mr-1" />
                     <span>{groupDetail._count.participants}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 inline mx-1" />
-                    <span>
-                      {new Date(groupDetail.createdAt).toLocaleDateString(
-                        locale,
-                        {
-                          dateStyle: 'medium',
-                        },
-                      )}
+                  {userBalanceTotal !== undefined ? (
+                    <span
+                      className={
+                        userBalanceTotal > 0
+                          ? 'text-green-600 dark:text-green-400 font-medium'
+                          : userBalanceTotal < 0
+                          ? 'text-red-600 dark:text-red-400 font-medium'
+                          : ''
+                      }
+                    >
+                      {userBalanceTotal === 0
+                        ? 'Settled up'
+                        : `${userBalanceTotal > 0 ? 'owed ' : 'owe '}${formatCurrency(
+                            getCurrencyFromGroup(groupDetail),
+                            Math.abs(userBalanceTotal),
+                            locale,
+                          )}`}
                     </span>
-                  </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 inline mx-1" />
+                      <span>
+                        {new Date(groupDetail.createdAt).toLocaleDateString(
+                          locale,
+                          {
+                            dateStyle: 'medium',
+                          },
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex justify-between">
