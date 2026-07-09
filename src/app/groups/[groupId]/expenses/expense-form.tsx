@@ -1,3 +1,4 @@
+import { CalculatorInput } from '@/components/calculator-input'
 import { CategorySelector } from '@/components/category-selector'
 import { CurrencySelector } from '@/components/currency-selector'
 import { ExpenseDocumentsInput } from '@/components/expense-documents-input'
@@ -678,13 +679,12 @@ export function ExpenseForm({
                   <div className="flex items-baseline gap-2">
                     <span>{group.currency}</span>
                     <FormControl>
-                      <Input
+                      <CalculatorInput
                         className="text-base max-w-[120px]"
-                        type="text"
-                        inputMode="decimal"
+                        inputMode="text"
                         placeholder="0.00"
-                        onChange={(event) => {
-                          const v = enforceCurrencyPattern(event.target.value)
+                        decimalDigits={groupCurrency.decimal_digits}
+                        onChange={(v) => {
                           const income = Number(v) < 0
                           setIsIncome(income)
                           if (income) form.setValue('isReimbursement', false)
