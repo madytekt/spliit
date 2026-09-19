@@ -75,7 +75,10 @@ export const getGroupStatsByCategoryProcedure = baseProcedure
     // Group by category (null category rolls up under a synthetic key).
     const buckets = new Map<
       number,
-      { category: { id: number; name: string; grouping: string } | null; amount: number }
+      {
+        category: { id: number; name: string; grouping: string } | null
+        amount: number
+      }
     >()
     for (const e of expenses) {
       const key = e.category?.id ?? 0

@@ -11,7 +11,9 @@ export function GroupBalanceBanner() {
   const activeUserId = useActiveUser(groupId)
   const { data } = trpc.groups.balances.list.useQuery(
     { groupId },
-    { enabled: !!activeUserId && activeUserId !== 'None' && activeUserId !== '' },
+    {
+      enabled: !!activeUserId && activeUserId !== 'None' && activeUserId !== '',
+    },
   )
 
   if (
@@ -41,14 +43,14 @@ export function GroupBalanceBanner() {
       {isOwed ? (
         <>
           You are owed{' '}
-          <Money currency={currency} amount={balance} bold colored />
-          {' '}in this group
+          <Money currency={currency} amount={balance} bold colored /> in this
+          group
         </>
       ) : (
         <>
           You owe{' '}
-          <Money currency={currency} amount={Math.abs(balance)} bold colored />
-          {' '}in this group
+          <Money currency={currency} amount={Math.abs(balance)} bold colored />{' '}
+          in this group
         </>
       )}
     </div>

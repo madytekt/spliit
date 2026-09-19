@@ -1,6 +1,6 @@
 'use client'
-import { CategoryIcon } from '@/app/groups/[groupId]/expenses/category-icon'
 import { useCurrentGroup } from '@/app/groups/[groupId]/current-group-context'
+import { CategoryIcon } from '@/app/groups/[groupId]/expenses/category-icon'
 import {
   Card,
   CardContent,
@@ -9,11 +9,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { Granularity } from '@/trpc/routers/groups/stats/by-category.procedure'
 import { cn, formatCurrency, getCurrencyFromGroup } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { Granularity } from '@/trpc/routers/groups/stats/by-category.procedure'
 import dayjs from 'dayjs'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale } from 'next-intl'
 import { useState } from 'react'
 

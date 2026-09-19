@@ -147,7 +147,9 @@ export function RecentGroupListCard({
                     >
                       {userBalanceTotal === 0
                         ? 'Settled up'
-                        : `${userBalanceTotal > 0 ? 'owed ' : 'owe '}${formatCurrency(
+                        : `${
+                            userBalanceTotal > 0 ? 'owed ' : 'owe '
+                          }${formatCurrency(
                             getCurrencyFromGroup(groupDetail),
                             Math.abs(userBalanceTotal),
                             locale,
