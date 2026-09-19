@@ -49,8 +49,8 @@ Access works through [Tailscale](https://tailscale.com/), a private network over
 - **Docker Compose** — Next.js app container + PostgreSQL container. Data persists in a named volume.
 - **Tailscale** — Creates an encrypted WireGuard tunnel between enrolled devices and the server. `tailscale serve` terminates HTTPS at the server; no certificate management needed.
 - **GitHub fork → build on server** — Source is cloned directly on the VPS. `docker compose up --build` to deploy updates.
-- **Google Sheets sync** — A nightly Google Apps Script job exports all expenses to a shared spreadsheet: one tab per group, an All tab combining everything, and a Sync Log. Useful as a human-readable backup and for ad-hoc spreadsheet analysis.
-- **Encrypted backups** — Nightly database backups (planned).
+- **Google Sheets sync** — A nightly cron job (`scripts/sync-sheets.js`) exports all expenses to a shared spreadsheet: one tab per group, an All tab combining everything, and a Sync Log. Useful as a human-readable backup and for ad-hoc spreadsheet analysis.
+- **Backups** — Nightly `pg_dump` copied off-box to cloud storage via `rclone`.
 
 ---
 
@@ -61,6 +61,10 @@ The upstream Spliit project already handles the hard parts (see below). This for
 | Feature | Description |
 |---|---|
 | **Delete Group** | A confirmation dialog that fully deletes a group and all its data in a single cascade. Upstream Spliit has no delete option. |
+| **Balance tallies** | A "you are owed / you owe overall" banner across all groups on the groups page, a per-group balance on each group card, and a balance banner at the top of each group's expense list. |
+| **Net out into Everyday** | One tap on the groups page folds every other group's balance into the group named "Everyday". Each debt is recorded as a pair of offsetting reimbursements (one settles the source group to zero, the other reappears in Everyday), so overall balances don't change and it can be undone by deleting the pair. |
+| **Spending by category** | A bar chart on each group's Stats page with week / month / quarter / year filters, previous/next navigation, and a change-vs-previous-period indicator. |
+| **Calculator amount field** | The expense amount field accepts arithmetic (e.g. `12.50+7*2`) with a live preview, rounded to the currency's decimals. Uses a safe hand-written parser (no `eval`). |
 | **Google Sheets sync** | Nightly export of all expenses to a shared Google Sheet. One tab per group, one combined tab, one sync log tab. |
 | **Self-hosting runbook** | Docker Compose setup, Tailscale configuration, Oracle Cloud provisioning guide — everything needed to reproduce this exact setup. |
 
