@@ -8,6 +8,7 @@ import {
 } from '@/app/groups/recent-groups-helpers'
 import { Button } from '@/components/ui/button'
 import { getGroups } from '@/lib/api'
+import { findNetOutTarget } from '@/lib/net-out'
 import { formatCurrency, getCurrencyFromGroup } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 import { AppRouterOutput } from '@/trpc/routers/_app'
@@ -15,6 +16,7 @@ import { Loader2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { PropsWithChildren, useEffect, useState } from 'react'
+import { NetOutButton } from './net-out-button'
 import { RecentGroupListCard } from './recent-group-list-card'
 
 export type RecentGroupsState =
@@ -181,6 +183,14 @@ function RecentGroupList_({
     crossGroupTotal += bal ?? 0
   }
 
+  // Net out: fold every other group's balance into the "Everyday" group
+  const netOutTargetDetail = findNetOutTarget(
+    data.groups.filter((g) => userBalances[g.id] !== undefined),
+  )
+  const netOutSources = data.groups
+    .filter((g) => g.id !== netOutTargetDetail?.id && userBalances[g.id])
+    .map((g) => ({ id: g.id, name: g.name, balance: userBalances[g.id]! }))
+
   const showCrossGroupTotal =
     allSameCurrency &&
     crossGroupCurrency !== null &&
@@ -205,15 +215,28 @@ function RecentGroupList_({
               ? 'You are owed overall'
               : 'You owe overall'}
           </span>
-          {crossGroupTotal !== 0 && (
-            <span className="font-bold text-base">
-              {formatCurrency(
-                crossGroupCurrency!,
-                Math.abs(crossGroupTotal),
-                locale,
-              )}
-            </span>
-          )}
+          <span className="flex items-center gap-3">
+            {crossGroupTotal !== 0 && (
+              <span className="font-bold text-base">
+                {formatCurrency(
+                  crossGroupCurrency!,
+                  Math.abs(crossGroupTotal),
+                  locale,
+                )}
+              </span>
+            )}
+            {netOutTargetDetail && netOutSources.length > 0 && (
+              <NetOutButton
+                target={{
+                  id: netOutTargetDetail.id,
+                  name: netOutTargetDetail.name,
+                  balance: userBalances[netOutTargetDetail.id] ?? 0,
+                }}
+                sources={netOutSources}
+                currency={crossGroupCurrency!}
+              />
+            )}
+          </span>
         </div>
       )}
 
