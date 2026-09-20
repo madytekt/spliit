@@ -1,7 +1,12 @@
 # Pins postgres to a stable version. postgres:latest jumped to v18 (breaking data layout).
+# restart: unless-stopped keeps both containers alive across reboots and Docker daemon
+# upgrades. It was applied on the box on 2026-08-01 but never committed, so every deploy
+# reset it to "no" — after which the app stayed down on the next restart (2026-09-19).
 services:
   db:
     image: postgres:16
+    restart: unless-stopped
   app:
+    restart: unless-stopped
     volumes:
       - ./google-credentials.json:/usr/app/google-credentials.json:ro
